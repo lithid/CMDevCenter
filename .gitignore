@@ -1,0 +1,9 @@
+*.deb
+*.changes
+*.dsc
+*.tar.gz
+*.install
+*.log
+substvars
+files
+build/debian/tmp
