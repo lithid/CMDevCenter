@@ -1,0 +1,484 @@
+#!/usr/bin/env python2
+
+from gi.repository import Gtk
+import webbrowser
+import subprocess
+import shutil
+import sys
+import os
+
+sys.path.append('/usr/share/cmdevcenter/')
+from Helper import Parser,Log,Util,Dialogs
+import CLocale
+Str = CLocale.CStrings
+
+# Import glade file
+builder = Gtk.Builder()
+builder.add_from_file("%s/layout.glade" % Str.FINAL_APP_DATA)
+
+# Main window
+win_main = builder.get_object("win_main")
+win_main.set_icon(Gtk.IconTheme().load_icon('cmdevcenter', 64, 0))
+
+#####
+# Main sync frame
+#####
+frame_sync = builder.get_object("frame_sync")
+
+#####
+# Main contribute frame
+#####
+frame_contribute = builder.get_object("frame_contribute")
+
+#####
+# Main compile frame
+#####
+frame_compile = builder.get_object("frame_compile")
+label_compile_repo_path = builder.get_object('label_compile_repo_path')
+label_compile_device = builder.get_object('label_compile_device')
+label_compile_branch = builder.get_object('label_compile_branch')
+
+#####
+# Main settings frame
+#####
+frame_settings = builder.get_object("frame_settings")
+
+#####
+# Main about frame
+#####
+frame_about = builder.get_object("frame_about")
+
+# Main statusbar
+status_main = builder.get_object("status_main")
+
+class CMDC:
+
+    def main(self):
+
+        def main_quit(widget, event):
+            Gtk.main_quit()
+
+        def onVerboseToggle(switch, isActive):
+            if switch.get_active():
+                Log().start()
+            else:
+                Log().stop()
+
+        # Sync functions
+        def onSyncPressed(button):
+            frame_contribute.hide()
+            frame_compile.hide()
+            frame_settings.hide()
+            frame_about.hide()
+            if frame_sync.get_visible():
+                frame_sync.hide()
+            else:
+                frame_sync.show()
+
+        def onRepoChangeSet(arg):
+            Parser().write("repo_path", arg.get_filename())
+
+        def resetRepoPath(button, fc):
+            Parser().write("repo_path", Str.FINAL_REPO_DIR)
+            fc.set_current_folder(Parser().read("repo_path"))
+
+        def dialogDevices(button, btn_choose_device):
+            global TOGGLE_DEVICE
+            def callback_device(widget, data):
+                global TOGGLE_DEVICE
+                TOGGLE_DEVICE = data
+
+            status_main.show()
+            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            dialog_devices = builder.get_object("dialog_radio_box")
+            dialog_devices.set_title("Choose device...")
+            box6 = builder.get_object("box6")
+            radio_device_group = Gtk.RadioButton(None, None)
+            status_main.push(0, "Loading: cm-build-targets")
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            device_list = []
+            button_count = 0
+            for i in subprocess.check_output(['wget', '-o', '/dev/null', '-O', '-', 'https://raw.github.com/CyanogenMod/hudson/master/cm-build-targets']).split('\n'):
+                if i and i[0].isalpha():
+                    button_count += 1
+                    x = i.split(" ")[0]
+                    x = x.split("_")[1].split("-")[0]
+                    device_list.append(x)
+
+            device_list.sort()
+            for x in device_list:
+                button = Gtk.RadioButton(group=radio_device_group, label=""+x)
+                button.connect("toggled", callback_device, x)
+                box6.pack_start(button, True, True, 0)
+                button.show()
+                status_main.push(0, "Loading Device: "+x)
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+
+            status_main.pop(0)
+            status_main.hide()
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            r = dialog_devices.run()
+            dialog_devices.destroy()
+            if r == 1:
+                Parser().write("device", TOGGLE_DEVICE)
+                btn_choose_device.set_label(Parser().read("device"))
+
+        def resetDevice(button, fc):
+            Parser().write("device", "(None)")
+            fc.set_label(Parser().read("device"))
+
+        def dialogBranch(button, arg):
+            status_main.show()
+            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            dialog = builder.get_object("dialog_radio_box")
+            dialog.set_title("Choose branch...")
+            box6 = builder.get_object("box6")
+            radio_group = Gtk.RadioButton(None, None)
+            status_main.push(0, "Loading: upstream branches")
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            button_count = 0
+            for i in subprocess.check_output(['git', 'ls-remote', '--heads', 'https://github.com/CyanogenMod/android.git']).split('\n'):
+                if i:
+                    button_count += 1
+                    x = i.split('\t')[1].split('/')[-1]
+                    button = Gtk.RadioButton(group=radio_group, label=""+x)
+                    box6.pack_start(button, True, True, 0)
+                    button.show()
+                    status_main.push(0, "Loading Branch: "+x)
+                    while Gtk.events_pending():
+                        Gtk.main_iteration_do(False)
+
+            status_main.pop(0)
+            status_main.hide()
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            r = dialog.run()
+            if r == 1:
+                active = [r for r in radio_group.get_group() if r.get_active()][0]
+                this = active.get_label()
+                if this is not None:
+                    Parser().write("branch", this)
+                    arg.set_label(Parser().read("branch"))
+            dialog.destroy()
+
+        def resetBranch(button, fc):
+            Parser().write("branch", "(None)")
+            fc.set_label(Parser().read("branch"))
+
+        def runSyncCmd(button):
+            switch_force_redo = builder.get_object("switch_force_redo")
+            FORCE = False
+            if switch_force_redo.get_active():
+                FORCE = True
+            o_rp = Parser().read("repo_path")
+            o_d = Parser().read("device")
+            o_b = Parser().read("branch")
+            o_cwd = os.getcwd()
+            os.chdir(o_rp)
+            subprocess.Popen(['/usr/bin/x-terminal-emulator', '-e', o_cwd+'/sync.sh', "%s"%o_d, "%s"%o_b, "%s"%FORCE], shell=False)
+            os.chdir(o_cwd)
+
+        def onLinkActivate(label, uri):
+            if uri == 'info_sync':
+                Dialogs().CDial(0, 'Define: sync', '<small><b>Sync:</b> This downloads all the needed source code and syncs your local files with files on the internet.</small>')
+
+            return True
+
+        # Contribute functions
+        def onConPressed(button):
+            frame_sync.hide()
+            frame_compile.hide()
+            frame_settings.hide()
+            frame_about.hide()
+            if frame_contribute.get_visible():
+                frame_contribute.hide()
+            else:
+                frame_contribute.show()
+
+        def dialogRepoPatchStart(button):
+            if Util().which("repo") is None:
+                Dialogs().CDial(0, 'Repo script not installed', 'Please install the repo script')
+                onSettingsPressed(None)
+                return
+
+            projectList = []
+            R = Parser().read("repo_path")
+            from xml.dom.minidom import parseString
+            file = open('%s/.repo/manifest.xml' % R, 'r')
+            data = file.read()
+            file.close()
+            dom = parseString(data)
+            xml = dom.getElementsByTagName('project')
+            for e in xml:
+                projectList.append(e.getAttribute('path'))
+
+            status_main.show()
+            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            dialog = builder.get_object("dialog_radio_box")
+            dialog.set_size_request(450, 300)
+            dialog.set_title("Choose project to add...")
+            box6 = builder.get_object("box6")
+            radio_group = Gtk.RadioButton(None, None)
+            status_main.push(0, "Loading: Projects")
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            button_count = 0
+            for i in projectList:
+                if i:
+                    button_count += 1
+                    button = Gtk.RadioButton(group=radio_group, label=""+i)
+                    box6.pack_start(button, True, True, 0)
+                    button.show()
+                    status_main.push(0, "Loading project: "+i)
+                    while Gtk.events_pending():
+                        Gtk.main_iteration_do(False)
+
+            status_main.pop(0)
+            status_main.hide()
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+
+            r = dialog.run()
+            if r == 1:
+                active = [r for r in radio_group.get_group() if r.get_active()][0]
+                this = active.get_label()
+                thisdir = this.replace('/', '$')
+                thisdir = '%s/%s' % (Str.FINAL_PATCH_DIR, thisdir)
+                gerrit_dir = thisdir+'/path.gerrit'
+                if this is not None:
+                    P = "%s/%s" % (R, this)
+
+                    if not os.path.exists(Str.FINAL_PATCH_DIR):
+                        os.mkdir(Str.FINAL_PATCH_DIR)
+
+                    if not os.path.exists(thisdir):
+                        os.mkdir(thisdir)
+
+                    if not os.path.exists(gerrit_dir):
+                        open(gerrit_dir,"w").close()
+                    f = open(gerrit_dir,"a")
+                    f.write("%s\n" % this)
+                    f.close()
+                    if os.path.exists(P):
+                        os.chdir(R)
+                        subprocess.Popen(['repo', 'start', 'cmdcBranch', this])
+            dialog.destroy()
+
+        def dialogRepoPatchRemove(button):
+            status_main.show()
+            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            dialog = builder.get_object("dialog_radio_box")
+            dialog.set_size_request(450, 250)
+            dialog.set_title("Choose project to remove...")
+            box6 = builder.get_object("box6")
+            radio_group = Gtk.RadioButton(None, None)
+            status_main.push(0, "Loading: Projects")
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+            button_count = 0
+            for i in os.listdir(Str.FINAL_PATCH_DIR):
+                i = i.replace('$', '/')
+                if i:
+                    button_count += 1
+                    button = Gtk.RadioButton(group=radio_group, label=""+i)
+                    box6.pack_start(button, True, True, 0)
+                    button.show()
+                    status_main.push(0, "Loading project: "+i)
+                    while Gtk.events_pending():
+                        Gtk.main_iteration_do(False)
+            status_main.pop(0)
+            status_main.hide()
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+            r = dialog.run()
+            if r == 1:
+                active = [r for r in radio_group.get_group() if r.get_active()][0]
+                this = active.get_label()
+                thisdir = this.replace('/', '$')
+                thisdir = '%s/%s' % (Str.FINAL_PATCH_DIR, thisdir)
+                gerrit_dir = thisdir+'/path.gerrit'
+                branch = Parser().read("branch")
+                R = Parser().read("repo_path")
+                if this is not None:
+                    P = "%s/%s" % (R, this)
+                    if os.path.exists(thisdir):
+                        shutil.rmtree(thisdir)
+                    if os.path.exists(P):
+                        os.chdir(R+"/"+this)
+                        out = subprocess.check_output(['git', 'reset', '--hard', 'github/%s' % branch])
+                        Dialogs().CDial(0, 'Project: %s' % this, out)
+            dialog.destroy()
+
+        # Compile functions
+        def onCompilePressed(button):
+            frame_sync.hide()
+            frame_contribute.hide()
+            frame_settings.hide()
+            frame_about.hide()
+            if frame_compile.get_visible():
+                frame_compile.hide()
+            else:
+                frame_compile.show()
+                updateCompileLabels()
+
+        def updateCompileLabels():
+            labs = (label_compile_repo_path, label_compile_device, label_compile_branch)
+            text = ('repo_path', 'device', 'branch')
+            num = 0
+            for i in labs:
+                i.set_markup('<small>%s</small>' % Parser().read(text[num]))
+                num+=1
+
+        # Settings functions
+        def onSettingsPressed(button):
+            frame_sync.hide()
+            frame_contribute.hide()
+            frame_compile.hide()
+            frame_about.hide()
+            if frame_settings.get_visible():
+                frame_settings.hide()
+            else:
+                frame_settings.show()
+                
+        def onInstallRepoScript(button):
+            FOLDER = Str.FINAL_HOME_BIN
+            if not os.path.exists(FOLDER):
+                q = Dialogs().QDial("Folder not found!", "Folder: <b>%s</b>\n\n This folder was not found" \
+                                    "and is needed to install repo script.\n\n Create? If you no you need" \
+                                    "to do this yourself." % FOLDER)
+                if q == True:
+                    os.mkdir(FOLDER)
+                else:
+                    return
+
+            p = subprocess.check_output(["curl", "https://dl-ssl.google.com/dl/googlesource/git-repo/repo"])
+            f = open(FOLDER+"/repo", "w")
+            f.write(p)
+            f.close()
+            os.chmod(FOLDER+"/repo", 0777)
+            if os.path.exists(FOLDER+"/repo"):
+                Dialogs().CDial(0, "Repo script installed", "Repo script is now installed!")
+            else:
+                Dialogs().CDial(0, "Repo script not installed", "Repo script is <b>not</b>" \
+                                "installed. Might want to try again.")
+                
+        # Settings functions
+        def onAboutPressed(button):
+            frame_sync.hide()
+            frame_contribute.hide()
+            frame_compile.hide()
+            frame_settings.hide()
+            if frame_about.get_visible():
+                frame_about.hide()
+            else:
+                frame_about.show()
+                
+        def onDeviceInfo(button):
+            openUrl(None, "http://wiki.cyanogenmod.org/w/%s_Info" % Parser().read("device"))
+            
+                
+        def openUrl(button, url):
+            webbrowser.open(url)
+        
+        # Main window objects
+        win_main.connect("delete-event", main_quit)
+
+        # Sync objects
+        btn_main_sync = builder.get_object("btn_main_sync")
+        btn_main_sync.connect("clicked", onSyncPressed)
+        
+        repo_path_chooser = builder.get_object("chooser_repo_path")
+        repo_path_chooser.set_current_folder(Parser().read("repo_path"))
+        repo_path_chooser.connect("current_folder_changed", onRepoChangeSet)
+        
+        btn_clear_repo = builder.get_object("btn_clear_repo")
+        btn_clear_repo.set_tooltip_text(Str.TOOLTIP_CLEAR_REPO_PATH)
+        btn_clear_repo.connect("clicked", resetRepoPath, repo_path_chooser)
+        
+        btn_choose_device = builder.get_object("btn_choose_device")
+        btn_choose_device.connect("clicked", dialogDevices, btn_choose_device)
+        btn_choose_device.set_label(Parser().read("device"))
+        
+        btn_clear_device = builder.get_object("btn_clear_device")
+        btn_clear_device.set_tooltip_text(Str.TOOLTIP_CLEAR_DEVICE)
+        btn_clear_device.connect("clicked", resetDevice,  btn_choose_device)
+        
+        btn_device_info = builder.get_object("btn_device_info")
+        btn_device_info.set_tooltip_text(Str.TOOLTIP_DEVICE_INFO)
+        btn_device_info.connect("clicked", onDeviceInfo)
+        
+        btn_choose_branch = builder.get_object("btn_choose_branch")
+        btn_choose_branch.connect("clicked", dialogBranch, btn_choose_branch)
+        btn_choose_branch.set_label(Parser().read("branch"))
+        
+        btn_clear_branch = builder.get_object("btn_clear_branch")
+        btn_clear_branch.set_tooltip_text(Str.TOOLTIP_CLEAR_BRANCH)
+        btn_clear_branch.connect("clicked", resetBranch,  btn_choose_branch)
+        
+        label_force_sync = builder.get_object("label1")
+        label_force_sync.set_markup('<small><b>Force redo:</b> This option will force the removal of an existing repo and do a re-<span><a href="info_sync">sync</a></span> in that directory no matter what. <span color="red">Choose wisely</span>.</small>')
+        label_force_sync.connect("activate-link", onLinkActivate)
+        
+        btn_sync = builder.get_object("btn_sync")
+        btn_sync.connect("clicked", runSyncCmd)
+        
+        # Contribute objects
+        btn_main_contribute = builder.get_object("btn_main_contribute")
+        btn_main_contribute.connect("clicked", onConPressed)
+        
+        btn_repo_start_patch = builder.get_object("btn_repo_start_patch")
+        btn_repo_start_patch.connect("clicked", dialogRepoPatchStart)
+
+        btn_repo_remove_patch = builder.get_object("btn_repo_remove_patch")
+        btn_repo_remove_patch.connect("clicked", dialogRepoPatchRemove)
+
+        # Compile objects
+        btn_main_compile = builder.get_object("btn_main_compile")
+        btn_main_compile.connect("clicked", onCompilePressed)
+        
+        # Settings objects
+        btn_main_settings = builder.get_object("btn_main_settings")
+        btn_main_settings.connect("clicked", onSettingsPressed)
+        
+        btn_settings_install_repo = builder.get_object("btn_settings_install_repo")
+        btn_settings_install_repo.set_tooltip_text(Str.TOOLTIP_EXECUTE_INSTALL_REPO_SCRIPT)
+        btn_settings_install_repo.connect("clicked", onInstallRepoScript)
+
+        box_install_repo_script = builder.get_object("box_install_repo_script")
+        if Util().which("repo") is None:
+            box_install_repo_script.set_sensitive(True)
+            
+        btn_donate = builder.get_object("btn_donate")
+        btn_donate.connect("clicked", openUrl, "http://goo.gl/511ca")
+        
+        label_author = builder.get_object("label_author")
+        label_author.set_markup(Str.APP_AUTHOR_LABEL % Str.APP_AUTHOR)
+
+        # Main
+        switch_verbose = builder.get_object("switch_verbose")
+        switch_verbose.connect("notify", onVerboseToggle)
+        
+        label_version = builder.get_object("label_version")
+        label_version.set_markup(Str.APP_VERSION_LABEL % Str.APP_VERSION)
+        
+        # About objects
+        btn_about = builder.get_object("btn_about")
+        btn_about.connect("clicked", onAboutPressed)
+
+        win_main.show()
+        Gtk.main()
+
+# Only run if this file wasn't imported
+if __name__ == "__main__":
+    C = CMDC()
+    Parser().write("verbose", False)
+    C.main()

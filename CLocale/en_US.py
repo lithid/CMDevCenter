@@ -1,0 +1,27 @@
+import CCommon
+
+# App info
+APP_TITLE = CCommon.APP_TITLE
+APP_TITLE_LONG = CCommon.APP_TITLE_LONG
+APP_VERSION = CCommon.APP_VERSION
+APP_AUTHOR = CCommon.APP_AUTHOR
+
+# Local Stuff
+FINAL_HOME = CCommon.FINAL_HOME
+FINAL_HOME_BIN = CCommon.FINAL_HOME_BIN
+FINAL_CONFIG_DIR = CCommon.FINAL_CONFIG_DIR
+FINAL_APP_DATA = CCommon.FINAL_APP_DATA
+FINAL_CONFIG = CCommon.FINAL_CONFIG
+FINAL_REPO_DIR = CCommon.FINAL_REPO_DIR
+FINAL_PATCH_DIR = CCommon.FINAL_PATCH_DIR
+    
+# Tooltips
+TOOLTIP_CLEAR_REPO_PATH = "Clear repo path"
+TOOLTIP_CLEAR_DEVICE = "Clear device"
+TOOLTIP_DEVICE_INFO = "Device info"
+TOOLTIP_CLEAR_BRANCH = "Clear branch"
+TOOLTIP_EXECUTE_INSTALL_REPO_SCRIPT = "Install repo script"
+
+#Main Strings
+APP_VERSION_LABEL = "<b>Version:</b> %s"
+APP_AUTHOR_LABEL = "<small><b>Written by:</b> %s </small>"

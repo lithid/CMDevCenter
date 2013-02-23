@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=0.1
+Name=CyanogenMod Dev Center
+Name[en_US]=CyanogenMod Dev Center
+GenericName=CyanogenMod Dev Center
+Comment=Development tool for CyanogenMod
+Exec=cmdevcenter
+Terminal=false
+Icon=cmdevcenter
+Type=Application
+Categories=GTK;Development;
