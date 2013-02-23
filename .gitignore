@@ -3,6 +3,7 @@
 *.dsc
 *.tar.gz
 *.install
+!cmdevcenter.install
 *.log
 substvars
 files
