@@ -1,5 +1,5 @@
 #!/bin/bash
-save='changelog cmdevcenter.install control dirs rules'
+save='changelog cmdevcenter.install compact control dirs rules'
 rm ../*.deb
 rm ../*.tar.gz
 rm ../*.changes
