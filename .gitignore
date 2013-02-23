@@ -27,3 +27,5 @@
 !layout.glade
 !README.md
 !scripts/sync.sh
+
+build/debian/cmdevcenter
