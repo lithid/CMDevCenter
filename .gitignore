@@ -5,7 +5,7 @@
 *.install
 !cmdevcenter.install
 *.log
-substvars
+*substvars
 files
 build/debian/cmdevcenter
 *.pyc
