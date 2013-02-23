@@ -182,8 +182,7 @@ class CMDC:
             o_d = Parser().read("device")
             o_b = Parser().read("branch")
             o_cwd = os.getcwd()
-            os.chdir(o_rp)
-            subprocess.Popen(['/usr/bin/x-terminal-emulator', '-e', o_cwd+'/sync.sh', "%s"%o_d, "%s"%o_b, "%s"%FORCE], shell=False)
+            subprocess.Popen(['/usr/bin/x-terminal-emulator', '-e', Str.FINAL_APP_SCRIPTS+'/sync.sh', "%s"%o_d, "%s"%o_b, "%s"%FORCE], shell=False)
             os.chdir(o_cwd)
 
         def onLinkActivate(label, uri):

@@ -2,6 +2,7 @@
 ../desktop/* usr/share/applications/
 ../cmdevcenter.png usr/share/icons/hicolor/64x64/apps/
 ../images/* usr/share/cmdevcenter/
+../scripts/* usr/share/cmdevcenter/scripts/
 ../Helper.py usr/share/cmdevcenter/
 ../CLocale/* usr/share/cmdevcenter/CLocale/
 ../layout.glade usr/share/cmdevcenter/
