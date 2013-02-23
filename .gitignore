@@ -6,5 +6,5 @@
 *.log
 substvars
 files
-build/debian/tmp
+build/debian/cmdevcenter
 *.pyc
