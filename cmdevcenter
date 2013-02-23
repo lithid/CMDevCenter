@@ -89,7 +89,7 @@ class CMDC:
                 TOGGLE_DEVICE = data
 
             status_main.show()
-            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            builder.add_from_file("%s/layout.glade" % Str.FINAL_APP_DATA)
             dialog_devices = builder.get_object("dialog_radio_box")
             dialog_devices.set_title("Choose device...")
             box6 = builder.get_object("box6")
@@ -134,7 +134,7 @@ class CMDC:
 
         def dialogBranch(button, arg):
             status_main.show()
-            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            builder.add_from_file("%s/layout.glade" % Str.FINAL_APP_DATA)
             dialog = builder.get_object("dialog_radio_box")
             dialog.set_title("Choose branch...")
             box6 = builder.get_object("box6")
@@ -221,7 +221,7 @@ class CMDC:
                 projectList.append(e.getAttribute('path'))
 
             status_main.show()
-            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            builder.add_from_file("%s/layout.glade" % Str.FINAL_APP_DATA)
             dialog = builder.get_object("dialog_radio_box")
             dialog.set_size_request(450, 300)
             dialog.set_title("Choose project to add...")
@@ -275,7 +275,7 @@ class CMDC:
 
         def dialogRepoPatchRemove(button):
             status_main.show()
-            builder.add_from_file("%s/layout.glade" % Str.LAYOUT_PATH)
+            builder.add_from_file("%s/layout.glade" % Str.FINAL_APP_DATA)
             dialog = builder.get_object("dialog_radio_box")
             dialog.set_size_request(450, 250)
             dialog.set_title("Choose project to remove...")
