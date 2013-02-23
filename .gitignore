@@ -7,3 +7,4 @@
 substvars
 files
 build/debian/tmp
+*.pyc
