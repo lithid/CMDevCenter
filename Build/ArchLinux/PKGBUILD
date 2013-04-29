@@ -1,0 +1,36 @@
+# Mantainer: mrlithid <mrlithid@gmail.com>
+pkgname=cmdevcenter
+pkgver=20130429
+pkgrel=1
+pkgdesc="CyanogenMod Dev Center, GUI Wrapper to compile/manage cyanogenmod repositories."
+arch=('i686' 'x86_64')
+url="https://github.com/lithid/CMDevCenter"
+license=('GPL3')
+depends=('gtk3', 'python2-gobject', 'pygtk')
+makedepends=('git')
+
+_gitroot="https://github.com/lithid/CMDevCenter.git"
+_gitname="CMDevCenter"
+
+build() {
+  msg "Starting make..."
+  dir=../../..
+  rm -rf $pkgdir
+  rm -rf $srcdir
+
+  mkdir -p $pkgdir/usr/share/$pkgname/scripts/
+  mkdir -p $pkgdir/usr/share/$pkgname/CLocale/
+  mkdir -p $pkgdir/usr/share/applications/
+  mkdir -p $pkgdir/usr/bin/
+  mkdir -p $pkgdir/usr/share/man/man7/
+  mkdir -p $pkgdir/usr/share/icons/hicolor/64x64/apps/
+  
+  cp -r $dir/cmdevcenter $pkgdir/usr/bin/
+  cp -r $dir/desktop/* $pkgdir/usr/share/applications/
+  cp -r $dir/cmdevcenter.png $pkgdir/usr/share/icons/hicolor/64x64/apps/
+  cp -r $dir/images/* $pkgdir/usr/share/$pkgname/
+  cp -r $dir/scripts/* $pkgdir/usr/share/$pkgname/scripts/
+  cp -r $dir/Helper.py $pkgdir/usr/share/$pkgname/
+  cp -r $dir/CLocale/* $pkgdir/usr/share/$pkgname/CLocale/
+  cp -r $dir/layout.glade $pkgdir/usr/share/$pkgname/
+}
