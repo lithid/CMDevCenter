@@ -27,5 +27,11 @@
 !layout.glade
 !README.md
 !scripts/sync.sh
-
+!Build/ArchLinux/PKGBUILD
+!Build/Debian/debian/control
+!Build/Debian/debian/compat
+!Build/Debian/debian/rules
+!Build/Debian/debian/changelog
+!Build/Debian/debian/dirs
+!Build/Debian/debian/cmdevcenter.install
 build/debian/cmdevcenter
