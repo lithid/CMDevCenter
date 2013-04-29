@@ -8,7 +8,7 @@ Make sure debhelper is installed:
 Now download the code , build and install.
 
     git clone git@github.com:lithid/CMDevCenter.git
-    cd CMDevCenter/build
+    cd CMDevCenter/Build/Debian
     dpkg-buildpackage -uc -us
     sudo dpkg -i ../cmdc_0.{VERSION}_amd64.deb
 
