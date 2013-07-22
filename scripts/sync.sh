@@ -7,7 +7,7 @@ force=$3
 echo "Syncing device: $device"
 echo "Branch: $branch"
 
-if [ $force == "True" ]; then
+if [ "$force" == "True" ]; then
 	echo
 	echo "Removing repo dir for force re-sync"
 	rm -rf .repo/
@@ -16,7 +16,7 @@ fi
 
 if [ ! -d .repo ]; then
 	echo
-	echo "First time syncing, need to answer a few questions."
+	echo "First time syncing, need to answer a few questions. $2"
 	read -p "Ok [Enter]"
 	repo init -u https://github.com/CyanogenMod/android.git -b $2
 fi

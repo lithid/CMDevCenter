@@ -42,6 +42,7 @@ label_compile_branch = builder.get_object('label_compile_branch')
 # Main settings frame
 #####
 frame_settings = builder.get_object("frame_settings")
+custom_terminal_edit = builder.get_object("custom_terminal")
 
 #####
 # Main about frame
@@ -174,15 +175,20 @@ class CMDC:
             fc.set_label(Parser().read("branch"))
 
         def runSyncCmd(button):
+            term = Parser().read("terminal")
+            if Util().which(term) is None:
+                Dialogs().CDial(2, 'No terminal choosen', 'Unable to find your terminal, please specify a terminal path in settings.')
+                return
             switch_force_redo = builder.get_object("switch_force_redo")
             FORCE = False
             if switch_force_redo.get_active():
                 FORCE = True
             o_rp = Parser().read("repo_path")
-            o_d = Parser().read("device")
-            o_b = Parser().read("branch")
+            DEVICE = Parser().read("device")
+            BRANCH = Parser().read("branch")
+            term = Parser().read("terminal")
             o_cwd = os.getcwd()
-            subprocess.Popen(['/usr/bin/x-terminal-emulator', '-e', Str.FINAL_APP_SCRIPTS+'/sync.sh', "%s"%o_d, "%s"%o_b, "%s"%FORCE], shell=False)
+            subprocess.check_output([term, '-e', Str.FINAL_APP_SCRIPTS+'/sync.sh', DEVICE, BRANCH, "%s"%FORCE])
             os.chdir(o_cwd)
 
         def onLinkActivate(label, uri):
@@ -369,6 +375,10 @@ class CMDC:
             else:
                 Dialogs().CDial(0, "Repo script not installed", "Repo script is <b>not</b>" \
                                 "installed. Might want to try again.")
+
+        def onSettingsSaved(button):
+            value = custom_terminal_edit.get_text()
+            Parser().write("terminal", value)
                 
         # Settings functions
         def onAboutPressed(button):
@@ -451,6 +461,11 @@ class CMDC:
         btn_settings_install_repo = builder.get_object("btn_settings_install_repo")
         btn_settings_install_repo.set_tooltip_text(Str.TOOLTIP_EXECUTE_INSTALL_REPO_SCRIPT)
         btn_settings_install_repo.connect("clicked", onInstallRepoScript)
+        
+        custom_terminal_edit.set_text(Parser().read("terminal"))
+        
+        btn_settings_save = builder.get_object("save_settings_button")
+        btn_settings_save.connect("clicked", onSettingsSaved)
 
         box_install_repo_script = builder.get_object("box_install_repo_script")
         if Util().which("repo") is None:

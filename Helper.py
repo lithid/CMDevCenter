@@ -70,6 +70,7 @@ class Parser():
             getRepoPath = config.get(Str.APP_TITLE, 'repo_path')
             getBranch = config.get(Str.APP_TITLE, 'branch')
             getDevice = config.get(Str.APP_TITLE, 'device')
+            getTerm = config.get(Str.APP_TITLE, 'terminal')
         except:
             getVerbose = None
             getRepoPath = None
@@ -106,6 +107,13 @@ class Parser():
             config.set(Str.APP_TITLE, 'device', getDevice)
         else:
             config.set(Str.APP_TITLE, 'device', "(None)")
+
+        if arg == 'terminal':
+            config.set(Str.APP_TITLE, 'terminal', value)
+        elif getDevice:
+            config.set(Str.APP_TITLE, 'terminal', getTerm)
+        else:
+            config.set(Str.APP_TITLE, 'terminal', "(None)")
 
         with open(Str.FINAL_CONFIG, 'wb') as configfile:
                 config.write(configfile)
