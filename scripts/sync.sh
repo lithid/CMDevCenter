@@ -16,7 +16,7 @@ fi
 
 if [ ! -d .repo ]; then
 	echo
-	echo "First time syncing, need to answer a few questions. $2"
+	echo "First time syncing, need to answer a few questions..."
 	read -p "Ok [Enter]"
 	repo init -u https://github.com/CyanogenMod/android.git -b $2
 fi

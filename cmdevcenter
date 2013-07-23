@@ -175,7 +175,7 @@ class CMDC:
             fc.set_label(Parser().read("branch"))
 
         def runSyncCmd(button):
-            term = Parser().read("terminal")
+            term = Parser().read("terminal").split(" ")[0]
             if Util().which(term) is None:
                 Dialogs().CDial(2, 'No terminal choosen', 'Unable to find your terminal, please specify a terminal path in settings.')
                 return
@@ -184,11 +184,13 @@ class CMDC:
             if switch_force_redo.get_active():
                 FORCE = True
             o_rp = Parser().read("repo_path")
+            os.chdir(o_rp)
+            print o_rp
             DEVICE = Parser().read("device")
             BRANCH = Parser().read("branch")
-            term = Parser().read("terminal")
+            TERM = Parser().read("terminal")
             o_cwd = os.getcwd()
-            subprocess.check_output([term, '-e', Str.FINAL_APP_SCRIPTS+'/sync.sh', DEVICE, BRANCH, "%s"%FORCE])
+            os.system("%s '%s/sync.sh %s %s %s'" % (TERM, Str.FINAL_APP_SCRIPTS, DEVICE, BRANCH, FORCE))
             os.chdir(o_cwd)
 
         def onLinkActivate(label, uri):
