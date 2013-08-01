@@ -9,8 +9,13 @@ license=('GPL3')
 depends=('gtk3' 'python2-gobject' 'pygtk')
 makedepends=('git')
 
-_gitroot="https://github.com/lithid/CMDevCenter.git"
-_gitname="CMDevCenter"
+source=('git://github.com/lithid/CMDevCenter')
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir/$_gitname"
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
 
 package() {
   msg "Starting make..."
@@ -34,3 +39,5 @@ package() {
   cp -r $dir/CLocale/* $pkgdir/usr/share/$pkgname/CLocale/
   cp -r $dir/layout.glade $pkgdir/usr/share/$pkgname/
 }
+
+# vim:set ts=2 sw=2 et:
