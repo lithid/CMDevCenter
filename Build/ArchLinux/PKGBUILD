@@ -1,6 +1,8 @@
 # Mantainer: mrlithid <mrlithid@gmail.com>
-pkgname=cmdevcenter
-pkgver=20130429
+pkgname=cmdevcenter #-git
+_pkgname=cmdevcenter
+_gitname=CMDevCenter
+pkgver=24.2b913db
 pkgrel=1
 pkgdesc="CyanogenMod Dev Center, GUI Wrapper to compile/manage cyanogenmod repositories."
 arch=('i686' 'x86_64')
@@ -18,26 +20,22 @@ pkgver() {
 }
 
 package() {
-  msg "Starting make..."
-  dir=../../..
-  rm -rf $pkgdir
-  rm -rf $srcdir
-
-  mkdir -p $pkgdir/usr/share/$pkgname/scripts/
-  mkdir -p $pkgdir/usr/share/$pkgname/CLocale/
-  mkdir -p $pkgdir/usr/share/applications/
-  mkdir -p $pkgdir/usr/bin/
-  mkdir -p $pkgdir/usr/share/man/man7/
-  mkdir -p $pkgdir/usr/share/icons/hicolor/64x64/apps/
+  cd "$srcdir/$_gitname"
   
-  cp -r $dir/cmdevcenter $pkgdir/usr/bin/
-  cp -r $dir/desktop/* $pkgdir/usr/share/applications/
-  cp -r $dir/cmdevcenter.png $pkgdir/usr/share/icons/
-  cp -r $dir/images/* $pkgdir/usr/share/$pkgname/
-  cp -r $dir/scripts/* $pkgdir/usr/share/$pkgname/scripts/
-  cp -r $dir/Helper.py $pkgdir/usr/share/$pkgname/
-  cp -r $dir/CLocale/* $pkgdir/usr/share/$pkgname/CLocale/
-  cp -r $dir/layout.glade $pkgdir/usr/share/$pkgname/
+  install -Dm755 "$_pkgname"                 "$pkgdir/usr/bin/$_pkgname"
+  install -Dm644 "$_pkgname.png"             "$pkgdir/usr/share/icons/$_pkgname.png"
+  install -Dm755 desktop/"$_pkgname.desktop" "$pkgdir/usr/share/applications/$_pkgname.desktop"
+
+  install -dm644                             "$pkgdir/usr/share/$_pkgname/"
+  install -Dm644 images/*                    "$pkgdir/usr/share/$_pkgname/"
+  install -Dm644 layout.glade                "$pkgdir/usr/share/$_pkgname/"
+  install -Dm755 Helper.py                   "$pkgdir/usr/share/$_pkgname/"
+
+  install -dm755                             "$pkgdir/usr/share/$_pkgname/CLocale"
+  install -Dm755 CLocale/*                   "$pkgdir/usr/share/$_pkgname/CLocale"
+  
+  install -dm755                             "$pkgdir/usr/share/$_pkgname/scripts"
+  install -Dm755 scripts/*                   "$pkgdir/usr/share/$_pkgname/scripts"
 }
 
 # vim:set ts=2 sw=2 et:
