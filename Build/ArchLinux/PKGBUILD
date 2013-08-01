@@ -26,7 +26,7 @@ package() {
   install -Dm644 "$_pkgname.png"             "$pkgdir/usr/share/icons/$_pkgname.png"
   install -Dm755 desktop/"$_pkgname.desktop" "$pkgdir/usr/share/applications/$_pkgname.desktop"
 
-  install -dm644                             "$pkgdir/usr/share/$_pkgname/"
+  install -dm755                             "$pkgdir/usr/share/$_pkgname/"
   install -Dm644 images/*                    "$pkgdir/usr/share/$_pkgname/"
   install -Dm644 layout.glade                "$pkgdir/usr/share/$_pkgname/"
   install -Dm755 Helper.py                   "$pkgdir/usr/share/$_pkgname/"
