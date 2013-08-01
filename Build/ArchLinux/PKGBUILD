@@ -8,7 +8,7 @@ pkgdesc="CyanogenMod Dev Center, GUI Wrapper to compile/manage cyanogenmod repos
 arch=('i686' 'x86_64')
 url="https://github.com/lithid/CMDevCenter"
 license=('GPL3')
-depends=('gtk3' 'python2-gobject' 'pygtk')
+depends=('gtk3' 'python2-gobject' 'pygtk' 'repo')
 makedepends=('git')
 
 source=('git://github.com/lithid/CMDevCenter')
